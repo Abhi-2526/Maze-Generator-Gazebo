@@ -140,8 +140,21 @@ def create_wall_box(wall, width, height, depth):
     name = etree.SubElement(script, 'name')
     name.text = 'Gazebo/Wood'
 
+def convert_all_mz_files(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for file_name in os.listdir(input_folder):
+        if file_name.endswith('.txt'):
+            input_path = os.path.join(input_folder, file_name)
+            output_file_name = file_name.replace('.txt', '.world')
+            output_path = os.path.join(output_folder, output_file_name)
+
+            convert_mz_to_world(input_path, output_path)
+            print(f"Converted {file_name} to {output_file_name}")
+
 
 if __name__ == '__main__':
-    mz_file = 'sample_maze.mz'
-    world_file = 'maze.world'
-    convert_mz_to_world(mz_file, world_file)
+    input_folder = './mazes'
+    output_folder = './maze worlds'
+    convert_all_mz_files(input_folder, output_folder)
