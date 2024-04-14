@@ -21,11 +21,6 @@ def convert_mz_to_world(mz_file, world_file, wall_height=2, wall_thickness=0.1, 
             if rows[i][j] == '|':
                 add_vertical_wall(world, i, i + 1, j, grid_size, wall_thickness, wall_height)
 
-    # Process vertical walls at the rightmost edge
-    # for i in range(num_rows):
-    #     if rows[i][-1] == '|':
-    #         add_vertical_wall(world, i, i + 1, num_cols, grid_size, wall_thickness, wall_height)
-
     # Process horizontal walls
     for i in range(len(rows)):
         j = 0
@@ -93,23 +88,37 @@ def create_ground(world, num_cols, num_rows, grid_size):
 
 
 def add_vertical_wall(world, start_i, end_i, j, grid_size, wall_thickness, wall_height):
-    length = (end_i - start_i) * grid_size
-    wall = etree.SubElement(world, 'model', name=f'vwall_{start_i}_{j}')
-    pose = etree.SubElement(wall, 'pose')
-    x = j * grid_size
-    y = -(start_i * grid_size + length / 2)
+    for i in range(start_i, end_i):
+        wall = etree.SubElement(world, 'model', name=f'vwall_{i}_{j}')
+        pose = etree.SubElement(wall, 'pose')
+        x = j * grid_size
+        y = -(i * grid_size + grid_size / 2)
+        pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
+        create_wall_box(wall, wall_thickness, grid_size - wall_thickness, wall_height)
+
+        create_wooden_joint(world, x, -i * grid_size, wall_thickness, wall_height)
+        if i < end_i - 1:
+            create_wooden_joint(world, x, -(i * grid_size + grid_size - wall_thickness / 2), wall_thickness, wall_height)
+
+
+def create_wooden_joint(world, x, y, wall_thickness, wall_height):
+    joint = etree.SubElement(world, 'model', name=f'joint_{x}_{y}')
+    pose = etree.SubElement(joint, 'pose')
     pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
-    create_wall_box(wall, wall_thickness, length, wall_height)
+    create_wall_box(joint, wall_thickness, wall_thickness, wall_height)
 
 
 def add_horizontal_wall(world, i, start_j, wall_length, grid_size, wall_thickness, wall_height, is_top):
-    length = wall_length * grid_size
-    wall = etree.SubElement(world, 'model', name=f'hwall_{i}_{start_j}')
-    pose = etree.SubElement(wall, 'pose')
-    x = start_j * grid_size + length / 2
-    y = -i * grid_size + (0 if is_top else -grid_size)
-    pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
-    create_wall_box(wall, length, wall_thickness, wall_height)
+    for j in range(start_j, start_j + wall_length):
+        wall = etree.SubElement(world, 'model', name=f'hwall_{i}_{j}')
+        pose = etree.SubElement(wall, 'pose')
+        x = j * grid_size + grid_size / 2
+        y = -i * grid_size + (0 if is_top else -grid_size + wall_thickness)
+        pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
+        create_wall_box(wall, grid_size - wall_thickness, wall_thickness, wall_height)
+
+        if j < start_j + wall_length - 1:
+            create_wooden_joint(world, j * grid_size + grid_size - wall_thickness / 2, y, wall_thickness, wall_height)
 
 
 def create_wall_box(wall, width, height, depth):
@@ -124,6 +133,12 @@ def create_wall_box(wall, width, height, depth):
     box = etree.SubElement(geometry, 'box')
     size = etree.SubElement(box, 'size')
     size.text = f'{width} {height} {depth}'
+    material = etree.SubElement(visual, 'material')
+    script = etree.SubElement(material, 'script')
+    uri = etree.SubElement(script, 'uri')
+    uri.text = 'file://media/materials/scripts/gazebo.material'
+    name = etree.SubElement(script, 'name')
+    name.text = 'Gazebo/Wood'
 
 
 if __name__ == '__main__':
