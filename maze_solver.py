@@ -35,7 +35,10 @@ class MazeDataCollector:
 
     def laser_callback(self, msg):
         laser_ranges = msg.ranges
-        self.dataset[-1].extend(laser_ranges)
+        if len(self.dataset) > 0:
+            self.dataset[-1].extend(laser_ranges)
+        else:
+            self.dataset.append(laser_ranges)
 
     def heuristic(self, pos):
         return abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1])
@@ -122,10 +125,11 @@ class MazeDataCollector:
 
     def run(self):
         while not rospy.is_shutdown():
-            laser_ranges = self.dataset[-1][-360:]
-            twist = self.a_star_maze_solver(laser_ranges)
-            self.vel_pub.publish(twist)
-            self.dataset[-1].extend([twist.linear.x, twist.linear.y, twist.angular.z])
+            if len(self.dataset) > 0 and len(self.dataset[-1]) >= 360:
+                laser_ranges = self.dataset[-1][-360:]
+                twist = self.a_star_maze_solver(laser_ranges)
+                self.vel_pub.publish(twist)
+                self.dataset[-1].extend([twist.linear.x, twist.linear.y, twist.angular.z])
             self.rate.sleep()
 
     def save_dataset(self):
