@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     try:
         for world_file in maze_worlds:
-            os.system(f"roslaunch turtlebot3_gazebo turtlebot3_world.launch world_file:={maze_worlds_dir}/{world_file}")
+            os.system(f"roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch world_name:={maze_worlds_dir}/{world_file}")
             collector = MazeDataCollector()
             collector.run()
             collector.save_dataset()
