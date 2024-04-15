@@ -147,7 +147,7 @@ class MazeDataCollector:
 
 
 if __name__ == '__main__':
-    maze_worlds_dir = './maze worlds'
+    maze_worlds_dir = './worlds'
 
     maze_worlds = [file for file in os.listdir(maze_worlds_dir) if file.endswith('.world')]
 

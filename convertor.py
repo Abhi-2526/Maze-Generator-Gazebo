@@ -156,5 +156,5 @@ def convert_all_mz_files(input_folder, output_folder):
 
 if __name__ == '__main__':
     input_folder = './mazes'
-    output_folder = './maze worlds'
+    output_folder = './worlds'
     convert_all_mz_files(input_folder, output_folder)
