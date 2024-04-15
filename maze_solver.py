@@ -25,8 +25,8 @@ class MazeDataCollector:
         self.sensor_data = []
         self.decision_data = []
         self.path_data = []
-        self.maze_size = (10, 10)
-        self.goal_pos = (9, 9)
+        self.maze_size = (11, 12)
+        self.goal_pos = (10, 11)
 
     def odom_callback(self, msg):
         position = msg.pose.pose.position
