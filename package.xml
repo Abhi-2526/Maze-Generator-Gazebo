@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>Maze-Generator-Gazebo</name>
+  <version>0.0.0</version>
+  <description>Maze generator package for Gazebo</description>
+  <maintainer email="abhinavsood401@gmail.com">Your Name</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+</package>
