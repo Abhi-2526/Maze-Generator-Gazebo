@@ -67,12 +67,17 @@ class MazeDataCollector:
         rospy.loginfo(f"Current position: {self.current_pos}")
         rospy.loginfo(f"Neighbors: {neighbors}")
 
-        for neighbor_pos in neighbors:
+        index = 0
+        neighbors = list(neighbors)  # Ensure neighbors is a list if not already
+        
+        while index < len(neighbors):
+            neighbor_pos = neighbors[index]
             if neighbor_pos not in self.visited:
                 direction = (neighbor_pos[0] - self.current_pos[0], neighbor_pos[1] - self.current_pos[1])
                 twist = Twist()
                 target_orientation = None
-
+                rospy.loginfo(f"The Direction is: {direction}")
+                
                 if direction[0] > 0 and laser_ranges[0] > 0.5:
                     self.decision_data.append("Moving forward")
                     twist.linear.x = 0.1
@@ -92,10 +97,20 @@ class MazeDataCollector:
                     twist.angular.z = -0.1
                     rospy.loginfo("Turning right")
 
-                while not self.wait_for_bot(neighbor_pos, target_orientation):
+                success = False
+                while not success:
+                    val = 0
+                    val = self.wait_for_bot(neighbor_pos, target_orientation)
                     self.vel_pub.publish(twist)
                     rospy.loginfo(f"Published velocity command: {twist}")
-                    rospy.sleep(0.5)
+                    rospy.loginfo("Waiting to reach the target or re-evaluate conditions...")
+                    rospy.sleep(0.5)  # Wait before trying again or breaking out based on additional conditions
+                    if val != 0:
+                        rospy.loginfo("wtf is going on")
+                        success = True
+
+                if val == 2:
+                    index += 1  # Move to the next neighbor only on success
 
         stop_twist = Twist()
         self.vel_pub.publish(stop_twist)
@@ -141,7 +156,7 @@ class MazeDataCollector:
         self.decision_data.append("No path found")
         return Twist()
 
-    def wait_for_bot(self, target_pos, target_orientation=None, position_threshold=0.01, orientation_threshold=0.2):
+    def wait_for_bot(self, target_pos, target_orientation=None, position_threshold=0.5, orientation_threshold=0.1):
         if self.odom_data:
             current_pos = tuple(self.odom_data[-1][:2])
             current_orientation = self.odom_data[-1][2:6]
@@ -167,13 +182,14 @@ class MazeDataCollector:
                     stop_twist = Twist()
                     self.vel_pub.publish(stop_twist)
                     rospy.loginfo("Bot stopped rotating")
+                    return 1
 
-            if position_reached and orientation_reached:
+            if position_reached:
                 rospy.loginfo(f"Bot reached target position: {target_pos} and orientation: {target_orientation}")
                 rospy.signal_shutdown('Objective Reached')
-                return True
+                return 2
 
-        return False
+        return 0
 
     def run(self):
         rospy.loginfo(f"In run")
