@@ -84,7 +84,7 @@ def create_ground(world, num_cols, num_rows, grid_size):
 
     # Set the pose so that the ground starts at (0, 0) and extends positively
     pose = etree.SubElement(ground, 'pose')
-    pose.text = f'{ground_size_x / 2} {-ground_size_y / 2} 0 0 0 0'
+    pose.text = f'{ground_size_x / 2} {ground_size_y / 2} 0 0 0 0'
 
 
 def add_vertical_wall(world, start_i, end_i, j, grid_size, wall_thickness, wall_height):
@@ -92,13 +92,13 @@ def add_vertical_wall(world, start_i, end_i, j, grid_size, wall_thickness, wall_
         wall = etree.SubElement(world, 'model', name=f'vwall_{i}_{j}')
         pose = etree.SubElement(wall, 'pose')
         x = j * grid_size
-        y = -(i * grid_size + grid_size / 2)
+        y = i * grid_size + grid_size / 2
         pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
         create_wall_box(wall, wall_thickness, grid_size - wall_thickness, wall_height)
 
-        create_wooden_joint(world, x, -i * grid_size, wall_thickness, wall_height)
+        create_wooden_joint(world, x, i * grid_size, wall_thickness, wall_height)
         if i < end_i - 1:
-            create_wooden_joint(world, x, -(i * grid_size + grid_size - wall_thickness / 2), wall_thickness, wall_height)
+            create_wooden_joint(world, x, i * grid_size + grid_size - wall_thickness / 2, wall_thickness, wall_height)
 
 
 def create_wooden_joint(world, x, y, wall_thickness, wall_height):
@@ -113,7 +113,7 @@ def add_horizontal_wall(world, i, start_j, wall_length, grid_size, wall_thicknes
         wall = etree.SubElement(world, 'model', name=f'hwall_{i}_{j}')
         pose = etree.SubElement(wall, 'pose')
         x = j * grid_size + grid_size / 2
-        y = -i * grid_size + (0 if is_top else -grid_size + wall_thickness)
+        y = i * grid_size + (grid_size - wall_thickness if is_top else 0)
         pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
         create_wall_box(wall, grid_size - wall_thickness, wall_thickness, wall_height)
 
@@ -140,6 +140,7 @@ def create_wall_box(wall, width, height, depth):
     name = etree.SubElement(script, 'name')
     name.text = 'Gazebo/Wood'
 
+
 def convert_all_mz_files(input_folder, output_folder):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -156,5 +157,5 @@ def convert_all_mz_files(input_folder, output_folder):
 
 if __name__ == '__main__':
     input_folder = './mazes'
-    output_folder = './worlds'
+    output_folder = './worlds_new'
     convert_all_mz_files(input_folder, output_folder)
