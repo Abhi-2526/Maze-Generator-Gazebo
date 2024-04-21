@@ -1,5 +1,6 @@
 import os
 from lxml import etree
+import xml.etree.ElementTree as ET
 
 
 def convert_mz_to_world(mz_file, world_file, wall_height=2, wall_thickness=0.1, grid_size=1.0):
@@ -84,7 +85,7 @@ def create_ground(world, num_cols, num_rows, grid_size):
 
     # Set the pose so that the ground starts at (0, 0) and extends positively
     pose = etree.SubElement(ground, 'pose')
-    pose.text = f'{ground_size_x / 2} {ground_size_y / 2} 0 0 0 0'
+    pose.text = f'{ground_size_x / 2} {-ground_size_y / 2} 0 0 0 0'
 
 
 def add_vertical_wall(world, start_i, end_i, j, grid_size, wall_thickness, wall_height):
@@ -92,13 +93,14 @@ def add_vertical_wall(world, start_i, end_i, j, grid_size, wall_thickness, wall_
         wall = etree.SubElement(world, 'model', name=f'vwall_{i}_{j}')
         pose = etree.SubElement(wall, 'pose')
         x = j * grid_size
-        y = i * grid_size + grid_size / 2
+        y = -(i * grid_size + grid_size / 2)
         pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
         create_wall_box(wall, wall_thickness, grid_size - wall_thickness, wall_height)
 
-        create_wooden_joint(world, x, i * grid_size, wall_thickness, wall_height)
+        create_wooden_joint(world, x, -i * grid_size, wall_thickness, wall_height)
         if i < end_i - 1:
-            create_wooden_joint(world, x, i * grid_size + grid_size - wall_thickness / 2, wall_thickness, wall_height)
+            create_wooden_joint(world, x, -(i * grid_size + grid_size - wall_thickness / 2), wall_thickness,
+                                wall_height)
 
 
 def create_wooden_joint(world, x, y, wall_thickness, wall_height):
@@ -113,7 +115,7 @@ def add_horizontal_wall(world, i, start_j, wall_length, grid_size, wall_thicknes
         wall = etree.SubElement(world, 'model', name=f'hwall_{i}_{j}')
         pose = etree.SubElement(wall, 'pose')
         x = j * grid_size + grid_size / 2
-        y = i * grid_size + (grid_size - wall_thickness if is_top else 0)
+        y = -i * grid_size + (0 if is_top else -grid_size + wall_thickness)
         pose.text = f'{x} {y} {wall_height / 2} 0 0 0'
         create_wall_box(wall, grid_size - wall_thickness, wall_thickness, wall_height)
 
@@ -155,7 +157,30 @@ def convert_all_mz_files(input_folder, output_folder):
             print(f"Converted {file_name} to {output_file_name}")
 
 
+def fix_pose(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for file_name in os.listdir(input_folder):
+        if file_name.endswith('.world'):
+            input_path = os.path.join(input_folder, file_name)
+            output_file_name = file_name
+            output_path = os.path.join(output_folder, output_file_name)
+            tree = ET.parse(input_path)
+            root = tree.getroot()
+
+            for pose_tag in root.iter('pose'):
+                pose_values = pose_tag.text.split()
+
+                if float(pose_values[1]) < 0:
+                    pose_values[1] = str(abs(float(pose_values[1])))
+                    pose_tag.text = ' '.join(pose_values)
+            tree.write(output_path, encoding='UTF-8', xml_declaration=True)
+
+
 if __name__ == '__main__':
     input_folder = './mazes'
-    output_folder = './worlds_new'
+    output_folder = './worlds'
+    pose_fixed_output_folder = './worlds_fixed_pose'
     convert_all_mz_files(input_folder, output_folder)
+    fix_pose(output_folder, pose_fixed_output_folder)
