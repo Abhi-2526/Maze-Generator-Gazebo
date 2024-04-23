@@ -3,8 +3,16 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
+import sys, select, termios, tty
 import csv
 import math
+
+def getKey():
+    tty.setraw(sys.stdin.fileno())
+    select.select([sys.stdin], [], [], 0)
+    key = sys.stdin.read(1)
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    return key
 
 def log_data(writer, pose, laser_data, twist, target_distance):
     orientation = pose.pose.pose.orientation
@@ -17,13 +25,22 @@ def log_data(writer, pose, laser_data, twist, target_distance):
     ]
     writer.writerow(data)
 
-def data_logger():
-    rospy.init_node('data_logger')
-    rospy.loginfo("Data logging node initialized.")
+def teleop_and_log():
+    rospy.init_node('turtlebot_teleop_and_log')
+    pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+    rospy.loginfo("TurtleBot Teleoperation and Data Logging node initialized.")
+    rospy.loginfo("Use arrow keys to move the TurtleBot:")
+    rospy.loginfo("  Up arrow: Move forward")
+    rospy.loginfo("  Down arrow: Move backward")
+    rospy.loginfo("  Left arrow: Rotate counterclockwise")
+    rospy.loginfo("  Right arrow: Rotate clockwise")
+    rospy.loginfo("Press 'q' to quit.")
 
     # Set the target position (replace with your desired target)
     target_x = 11.0
     target_y = 11.0
+
+    twist = Twist()
 
     # Open a CSV file for logging data
     with open('imitation_learning_dataset.csv', 'w') as csvfile:
@@ -34,14 +51,34 @@ def data_logger():
 
         rate = rospy.Rate(10)  # 10 Hz logging frequency
         while not rospy.is_shutdown():
+            key = getKey()
+            if key == 'w':
+                twist.linear.x = 0.2
+                twist.angular.z = 0.0
+            elif key == 's':
+                twist.linear.x = -0.2
+                twist.angular.z = 0.0
+            elif key == 'a':
+                twist.linear.x = 0.0
+                twist.angular.z = 0.5
+            elif key == 'd':
+                twist.linear.x = 0.0
+                twist.angular.z = -0.5
+            elif key == 'q':
+                twist.linear.x = 0.0
+                twist.angular.z = 0.0
+                rospy.loginfo("Quitting...")
+                rospy.signal_shutdown("User requested shutdown.")
+            else:
+                twist.linear.x = 0.0
+                twist.angular.z = 0.0
+            pub.publish(twist)
+
             # Get the current pose of the robot
             pose = rospy.wait_for_message('/odom', Odometry)
 
             # Get the current laser scan data
             laser_data = rospy.wait_for_message('/scan', LaserScan)
-
-            # Get the current velocity of the robot
-            twist = rospy.wait_for_message('/cmd_vel', Twist)
 
             # Calculate the distance to the target position
             dx = target_x - pose.pose.pose.position.x
@@ -54,8 +91,15 @@ def data_logger():
             rate.sleep()
 
 if __name__ == '__main__':
+    settings = termios.tcgetattr(sys.stdin)
     try:
-        data_logger()
+        teleop_and_log()
     except rospy.ROSInterruptException:
         pass
-
+    finally:
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+        pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        pub.publish(twist)
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
