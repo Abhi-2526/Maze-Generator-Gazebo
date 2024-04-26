@@ -1,4 +1,4 @@
-import random
+import secrets
 
 def make_maze(w=10, h=10):
     wall = 'wall'
@@ -20,7 +20,7 @@ def make_maze(w=10, h=10):
                     neighbors.append((nx, ny))
 
         if neighbors:
-            stack.append(random.choice(neighbors))
+            stack.append(secrets.choice(neighbors))
         else:
             stack.pop()
 

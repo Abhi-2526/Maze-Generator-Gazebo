@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import math
-import random
 import sys
 import time
 import rospy
@@ -9,6 +8,7 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from rospy.exceptions import ROSInterruptException
 from nav_msgs.msg import Odometry
+import secrets
 
 g_distance_wall = 0.5
 g_wall_lead = 0.5
@@ -110,7 +110,7 @@ def scan_callback(msg):
         g_loop=g_loop+1
         print("the number of loops is:",g_loop)
         if delta_time > 6:
-            rand = random.randrange(0, 5)
+            rand = secrets.SystemRandom().randrange(0, 5)
 
             g_alpha = math.pi / 2 - rand * math.pi / 4
 
@@ -132,7 +132,7 @@ def scan_callback(msg):
                 if left < scan_max_value or right < scan_max_value:
                     g_side = -1 if right < left else 1
                 else:
-                    g_side = random.randrange(-1, 2, 2)
+                    g_side = secrets.SystemRandom().randrange(-1, 2, 2)
 
             print('Will change to state 2: follow wall from the {}'.format('left' if g_side == 1 else 'right'))
             return
