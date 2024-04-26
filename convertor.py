@@ -1,6 +1,6 @@
 import os
 from lxml import etree
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree
 
 
 def convert_mz_to_world(mz_file, world_file, wall_height=2, wall_thickness=0.1, grid_size=1.0):
@@ -166,7 +166,7 @@ def fix_pose(input_folder, output_folder):
             input_path = os.path.join(input_folder, file_name)
             output_file_name = file_name
             output_path = os.path.join(output_folder, output_file_name)
-            tree = ET.parse(input_path)
+            tree = defusedxml.ElementTree.parse(input_path)
             root = tree.getroot()
 
             for pose_tag in root.iter('pose'):
