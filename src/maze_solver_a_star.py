@@ -56,7 +56,7 @@ class MazeDataCollector:
         return neighbors
 
     def a_star_maze_solver(self, laser_ranges):
-        rospy.loginfo(f"In A* solver")
+        rospy.loginfo("In A* solver")
         # if len(self.odom_data) > 0:
         #     current_pos = tuple(self.odom_data[-1][:2])
         # else:
@@ -67,10 +67,10 @@ class MazeDataCollector:
 
         start_node = Node(current_pos, 0, None)
         heapq.heappush(open_list, (start_node.cost + self.heuristic(current_pos), start_node))
-        rospy.loginfo(f"Proceeding in A*")
+        rospy.loginfo("Proceeding in A*")
         path = []
         while open_list:
-            rospy.loginfo(f"Inside while")
+            rospy.loginfo("Inside while")
             current_node = heapq.heappop(open_list)[1]
             rospy.loginfo(f"Current node: {current_node.pos}")
             closed_list.add(current_node.pos)
@@ -110,7 +110,7 @@ class MazeDataCollector:
                 new_node = Node(neighbor_pos, new_cost, current_node)
                 heapq.heappush(open_list, (new_node.cost + self.heuristic(neighbor_pos), new_node))
 
-        rospy.loginfo(f"More progress made in A*")
+        rospy.loginfo("More progress made in A*")
         self.sensor_data.append(laser_ranges)
 
         twist = Twist()
@@ -155,12 +155,12 @@ class MazeDataCollector:
         return twist
 
     def run(self):
-        rospy.loginfo(f"In run")
+        rospy.loginfo("In run")
         self.timer = rospy.Timer(rospy.Duration(1), self.collect_data)
         rospy.spin()
 
     def collect_data(self, event):
-        rospy.loginfo(f"In collect")
+        rospy.loginfo("In collect")
         timestamp = rospy.Time.now().to_sec()
         if len(self.dataset) > 0:
             laser_ranges = self.dataset[-1]
